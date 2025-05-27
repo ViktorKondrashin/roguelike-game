@@ -1,6 +1,8 @@
 #include "LevelManager.h"
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
+#include <random>
 
 sf::IntRect LevelManager::getPathVariant(int x, int y) const
 {
@@ -67,7 +69,40 @@ LevelManager::LevelManager(const std::vector<std::string>& levelData)
   }
 }
 
+bool LevelManager::loadFromFile(const std::string& filePath) {
+  std::ifstream file(filePath);
+  if (!file.is_open()) {
+    std::cerr << "Failed to open level file: " << filePath << std::endl;
+    return false;
+  }
 
+  levelData_.clear();
+  std::string line;
+
+  while (std::getline(file, line)) {
+    if (!line.empty()) {
+      levelData_.push_back(line);
+    }
+  }
+
+  if (levelData_.empty()) {
+    std::cerr << "Level file is empty!" << std::endl;
+    return false;
+  }
+
+  height_ = levelData_.size();
+  width_ = levelData_[0].size();
+
+  // Проверка, что все строки одинаковой длины
+  for (const auto& row : levelData_) {
+    if (row.size() != width_) {
+      std::cerr << "Inconsistent level width!" << std::endl;
+      return false;
+    }
+  }
+
+  return true;
+}
 
 char LevelManager::getTile(int x, int y) const
 {
@@ -89,18 +124,68 @@ bool LevelManager::loadTileset(const std::string& path)
   tileTextures_ = {
       {'0', {0, 0, 32, 32}},  
       {'w',{160,128,32,32}},
+      {'b',{340, 192, 32, 32}},
       {' ', {0, 32, 32, 32}},  
       {'=', {64, 192, 32, 32}},
       {'f', {0, 96, 32, 32}},  
       {'s', {0, 128, 32, 32}}, 
       {'l', {0, 160, 32, 32}}  
   };
+  randomTileVariants_[' '] = {
+        {0, 0, 32, 32},   // row 1
+        {32, 0, 32, 32},
+        {64, 0, 32, 32},
+        {96, 0, 32, 32},
+        {0, 32, 32, 32},    // row 2
+        {32, 32, 32, 32},
+        {64, 32, 32, 32},
+        {96, 32, 32, 32},
+        {0, 64, 32, 32},    // row 3
+        {32, 64, 32, 32},
+        {64, 64, 32, 32},
+        {96, 64, 32, 32},
+        {0, 96, 32, 32},    // row 4
+        {32, 96, 32, 32},
+        {64, 96, 32, 32},
+        {96, 96, 32, 32}
+        
+  };
+  randomTileVariants_['f'] = {
+        {128, 0, 32, 32},   // row 1
+        {160, 0, 32, 32},
+        {192, 0, 32, 32},
+        {224, 0, 32, 32},
+        {128, 32, 32, 32},    // row 2
+        {160, 32, 32, 32},
+        {192, 32, 32, 32},
+        {224, 32, 32, 32},
+        {128, 64, 32, 32},    // row 3
+        {160, 64, 32, 32},
+        {192, 64, 32, 32},
+        {224, 64, 32, 32},
+        {128, 96, 32, 32},    // row 4
+        {160, 96, 32, 32},
+        {192, 96, 32, 32},
+        {224, 96, 32, 32}
+  };
   return true;
 }
 
-void LevelManager::drawLevel(sf::RenderWindow& window) const
-{
+sf::IntRect LevelManager::getRandomTileVariant(char tileType) const {
+  static std::random_device rd;
+  static std::mt19937 gen(rd());
+
+  if (randomTileVariants_.count(tileType)) {
+    const auto& variants = randomTileVariants_.at(tileType);
+    std::uniform_int_distribution<> distr(0, variants.size() - 1);
+    return variants[distr(gen)];
+  }
+  return tileTextures_.at(tileType); // Возвращаем базовый вариант, если нет случайных
+}
+
+void LevelManager::drawLevel(sf::RenderWindow& window) const {
   sf::Sprite tileSprite(tileset_);
+  static std::map<std::pair<int, int>, sf::IntRect> tileCache; // Кэш для постоянства
 
   for (int y = 0; y < height_; ++y) {
     for (int x = 0; x < width_; ++x) {
@@ -110,7 +195,14 @@ void LevelManager::drawLevel(sf::RenderWindow& window) const
       if (tile == '=') {
         tileSprite.setTextureRect(getPathVariant(x, y));
       }
-
+      else if (tile == ' ' || tile == 'f') {
+        // Используем кэш, чтобы тайлы не менялись каждый кадр
+        auto pos = std::make_pair(x, y);
+        if (!tileCache.count(pos)) {
+          tileCache[pos] = getRandomTileVariant(tile);
+        }
+        tileSprite.setTextureRect(tileCache[pos]);
+      }
       else {
         tileSprite.setTextureRect(tileTextures_.at(tile));
       }
@@ -119,7 +211,6 @@ void LevelManager::drawLevel(sf::RenderWindow& window) const
     }
   }
 }
-
 bool LevelManager::isWall(int x, int y) const
 {
   return getTile(x,y)=='0';

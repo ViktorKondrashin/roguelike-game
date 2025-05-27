@@ -14,6 +14,9 @@ int main()
 
   // Инициализация игровых компонентов
   LevelManager levelManager;
+  if (!levelManager.loadFromFile("data/room3.txt")) {
+    std::cerr << "Failed to load level data!" << std::endl;
+  }
   if (!levelManager.loadTileset("image/map.png")) {
     std::cerr << "Failed to load tileset!" << std::endl;
     return -1;

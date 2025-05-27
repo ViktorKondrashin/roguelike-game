@@ -3,7 +3,6 @@
 Player::Player(float _x, float _y, float _height, float _width, std::string way, LevelManager* lvlMgr) :Entity(_x, _y, _height, _width, way) { 
   LevelManager_ = lvlMgr; 
   usePixelPerfect = true;
-  sprite.setOrigin(16, 16);
   if (!texture.loadFromFile(way)) {
     std::cerr << "Failed to load player texture: " << way << std::endl;
   }
