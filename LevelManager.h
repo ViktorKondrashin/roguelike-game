@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <SFML/Graphics.hpp>
+#include <fstream>
 
 /*
     обозначения тайлов  
@@ -26,8 +27,13 @@ private:
   std::unordered_map<char, sf::IntRect> tileTextures_;
   sf::IntRect getPathVariant(int x, int y) const;
 
+  std::unordered_map<char, std::vector<sf::IntRect>> randomTileVariants_;
+
+  sf::IntRect getRandomTileVariant(char tileType) const;
+
 public:
   explicit LevelManager(const std::vector<std::string>& levelData = {});
+  bool loadFromFile(const std::string& filePath);
 
   char getTile(int x, int y) const;
   void setTile(int x, int y, char tile);
