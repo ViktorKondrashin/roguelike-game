@@ -413,7 +413,7 @@ void LevelManager::drawLevel(sf::RenderWindow& window) const {
 }
 bool LevelManager::isWall(int x, int y) const
 {
-  return getTile(x,y)=='0';
+  return getTile(x,y)=='b';
 }
 
 bool LevelManager::isWalkable(int x, int y) const
