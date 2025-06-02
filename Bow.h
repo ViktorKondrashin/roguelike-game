@@ -10,14 +10,10 @@ public:
   void attack(const sf::Vector2f& startPos, const sf::Vector2f& targetPos) override;
   void update(float deltaTime) override;
   void draw(sf::RenderWindow& window) override;
-
-  // ¬озвращает константную ссылку на стрелы
+  int getDamage() { return damage; }
   const std::vector<std::shared_ptr<Arrow>>& getArrows() const { return arrows; }
   std::vector<std::shared_ptr<Arrow>> arrows;
 
 private:
   float arrowSpeed;
-  float attackSpeed;
-  float damage;
-  float cooldown = 0.f;
 };

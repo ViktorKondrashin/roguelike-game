@@ -1,48 +1,60 @@
 #include "WaveManager.h"
 #include "MonsterFactory.h"
 #include <iostream>
+#include "Player.h"
 
 void WaveManager::loadRoomWaves(const std::string& roomBaseName) {
   waves.clear();
   currentWaveIndex = 0;
+  std::cout << "Trying to load waves for room: " << roomBaseName << std::endl;
 
-  // NEW: Загружаем все волны комнаты (room1_1.waves, room1_2.waves...)
   int waveNum = 1;
   while (true) {
     std::string path = "data/" + roomBaseName + "_" + std::to_string(waveNum) + ".waves";
+    std::cout << "Checking file: " << path << std::endl;
     auto loadedWave = WaveLoader::loadFromFile(path);
+    if (loadedWave.empty()) break;
 
-    if (loadedWave.empty()) break; // Файла нет -> конец волн
-
-    // Конвертируем MonsterWave -> SpawnPoint
     std::vector<SpawnPoint> wave;
     for (const auto& spawn : loadedWave) {
       wave.push_back({ spawn.x, spawn.y, spawn.type });
     }
-
     waves.push_back(wave);
     waveNum++;
   }
-  std::cout << "Loaded " << waves.size() << " waves for room " << roomBaseName << std::endl;
+  std::cout << "Total waves loaded: " << waves.size() << std::endl;
 }
 
 void WaveManager::spawnNextWave(Player* player) {
-  if (currentWaveIndex >= waves.size()) return;
+  if (currentWaveIndex >= waves.size()) {
+    std::cout << "No more waves to spawn!" << std::endl;
+    return;
+  }
 
   monsters.clear();
   for (const auto& spawn : waves[currentWaveIndex]) {
+    std::string texturePath = "image/" + spawn.type + ".png";
+    std::cout << "Spawning " << spawn.type << " at ("
+      << spawn.x * 32 << "," << spawn.y * 32
+      << ") with texture: " << texturePath << std::endl;
+
+    std::string typeUpper = spawn.type;
+    std::transform(typeUpper.begin(), typeUpper.end(), typeUpper.begin(), ::toupper);
+
     auto monster = MonsterFactory::create(
-      spawn.type,
+      typeUpper,
       spawn.x * 32.0f,
       spawn.y * 32.0f,
       32.0f, 32.0f,
       "image/" + spawn.type + ".png",
-      player
+      player, player->levelManager
     );
+
     if (monster) {
       monsters.push_back(std::move(monster));
-      std::cout << "Spawned " << spawn.type << " at ("
-        << spawn.x * 32 << "," << spawn.y * 32 << ")" << std::endl;
+    }
+    else {
+      std::cerr << "Failed to spawn " << spawn.type << std::endl;
     }
   }
   currentWaveIndex++;
@@ -56,13 +68,12 @@ bool WaveManager::isWaveCleared() const {
 }
 
 bool WaveManager::areAllWavesDone() const {
-  return currentWaveIndex >= waves.size();
+  return currentWaveIndex >= waves.size() && monsters.empty();
 }
 
 void WaveManager::startNextWave(Player* player) {
   this->player = player;
   if (currentWaveIndex >= waves.size()) return;
-  // Устанавливаем паузу 5 секунд после первой волны
   if (currentWaveIndex > 0) {
     waveDelay = 5.0f;
     isWaitingBetweenWaves = true;
@@ -89,7 +100,7 @@ void WaveManager::update(float deltaTime) {
   );
   for (auto& monster : monsters) {
     if (monster->life) {
-      monster->update(deltaTime); // Теперь монстры будут "жить"
+      monster->update(deltaTime);
     }
   }
 }

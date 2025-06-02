@@ -6,26 +6,35 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <memory>
+#include "InteractionHint.h"
+#include "StaticObstacle.h"
 
 class RoomManager {
 public:
+  bool isPlayerNearExit() const;
   void init(Player* player, LevelManager* level);
   void update(float deltaTime);
   void draw(sf::RenderWindow& window);
   void drawUI(sf::RenderWindow& window, const sf::View& view);
   void loadRoom(const std::string& roomName);
   bool isRoomCleared() const;
+  void resetWaves() { waveManager.currentWaveIndex = 1; }
   int getCurrentWaveIndex() const;
   int getTotalWaves() const;
   bool isWaiting() const;
   float getRemainingDelay() const;
   const std::vector<std::shared_ptr<Monster>>& getMonsters() const { return waveManager.monsters; }
+  void addStaticObstacle(std::shared_ptr<StaticObstacle> obstacle);
 
 private:
+  bool exitUnlocked_ = false;
+  float waitTimer_ = 0.f;
   Player* player = nullptr;
   LevelManager* level = nullptr;
   WaveManager waveManager;
   bool isActive = false;
+  InteractionHint interactionHint;
+  bool isPlayerNearChest = false;
 
   sf::Text waveText;
   sf::Font font;
@@ -33,6 +42,7 @@ private:
   sf::Text roomClearedText;
 
   void initUI();
+  std::vector<std::shared_ptr<StaticObstacle>> staticObstacles;
   std::vector<std::shared_ptr<Entity>> getAllEntities() const;
   void updateCollisions();
 };

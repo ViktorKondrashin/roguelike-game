@@ -13,5 +13,5 @@ private:
   float damage;
   bool isAttacking = false;
   sf::Clock attackTimer;
-  sf::RectangleShape hitbox; // Визуализация удара
+  sf::RectangleShape hitbox;
 };

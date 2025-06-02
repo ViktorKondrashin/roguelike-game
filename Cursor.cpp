@@ -11,4 +11,3 @@ void Cursor::update(const sf::RenderWindow& window)
 {
   cursorSprite.setPosition(static_cast<sf::Vector2f>(sf::Mouse::getPosition(window)));
 }
-

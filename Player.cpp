@@ -1,10 +1,30 @@
 #include "Player.h"
+#include "GameManager.h"
 #include <iostream>
-Player::Player(float _x, float _y, float _height, float _width, std::string way, LevelManager* lvlMgr) :Entity(_x, _y, _height, _width, way) { 
-  LevelManager_ = lvlMgr; 
+
+Player::Player(float _x, float _y, float _height, float _width, std::string way, LevelManager* lvlMgr)
+  : Entity(_x, _y, _height, _width, way, lvlMgr)
+{
+  levelManager = lvlMgr; 
   usePixelPerfect = true;
   if (!texture.loadFromFile(way)) {
     std::cerr << "Failed to load player texture: " << way << std::endl;
+  }
+  sprite.setOrigin(width / 2, height / 2);
+  maxHP = 100;
+  hp = maxHP;
+  money = 0;
+  baseSpeed = 0.1f;
+}
+
+void Player::loadProfileStats(int hpValue, int damageValue, float speedMultiplier, int startingMoney) {
+  maxHP = hpValue;
+  hp = hpValue;
+  money = startingMoney;
+  baseSpeed = speedMultiplier;
+
+  if (currentWeapon) {
+    currentWeapon->damage = damageValue;
   }
 }
 
@@ -70,18 +90,17 @@ void Player::control(float deltaTime)
 
 void Player::update(float deltaTime)
 {
-  if (life) {// Обновляем статус-эффекты
+  if (life) {
     statusSystem->update(sf::seconds(deltaTime));
 
-    // Если не оглушен - обрабатываем управление
     if (!hasStatusEffect(StatusEffectType::Stunned)) {
       control(deltaTime);
     }
   }
-  // Применяем модификаторы скорости
   float speedModifier = hasStatusEffect(StatusEffectType::Freezing) ? 0.5f : 1.0f;
-  
-  if (dir != 0) setPlayerSpeed(0.1 * speedModifier);
+  if (dir != 0) {
+    setPlayerSpeed(baseSpeed * speedModifier);
+  }
 
   switch (dir) {
   case 0: dx = 0; dy = 0; break;
@@ -100,12 +119,14 @@ void Player::update(float deltaTime)
   speed = 0;
   dir = 0;
   interactWithMap();
-  if (hp<= 0) {life=false;}
+  if (hp <= 0) {
+    life = false;
+    GameManager::getInstance().saveProfiles();
+  }
   sprite.setPosition(x, y);
   if (currentWeapon) {
     currentWeapon->update(deltaTime);
   }
-  
 }
 
 void Player::drawWeapon(sf::RenderWindow& window)
@@ -115,78 +136,38 @@ void Player::drawWeapon(sf::RenderWindow& window)
   }
 }
 
-void Player::reset()
+void Player::upgradeHP(int amount)
 {
-  hp = maxHp;
+  maxHP += amount;
+  hp = maxHP;
 }
 
+void Player::upgradeDamage(int amount) {
+    currentWeapon->damage += amount;
+}
+
+void Player::upgradeSpeed(float amount) {
+    currentWeapon->attackSpeed *= amount;
+}
+
+void Player::reset()
+{
+    life = true;
+    hp = maxHP;
+    isDying = false;
+    canCollide = true;
+    deathTimer = 0.f;
+}
 void Player::addMoney(int _money)
 {
   money += _money;
 }
 
-
-
-
 void Player::setLevelManager(LevelManager* lvlMgr)
 {
-  LevelManager_ = lvlMgr;
+  levelManager = lvlMgr;
 }
 
-void Player::interactWithMap() {
-  for (int i = y / 32; i <= (y + height - 1) / 32; i++) {
-    for (int j = x / 32; j <= (x + width - 1) / 32; j++) {
-      char tile = LevelManager_->getTile(j, i);
-
-      if (tile == 's') {
-        money++;
-        LevelManager_->setTile(j, i, ' ');
-      }
-      else if (tile == 'l') {
-        hp--;
-      }
-      else if (!LevelManager_->isWalkable(j, i)) {
-
-        float mapWidth = LevelManager_->getWidth() * 32.0f;
-        float mapHeight = LevelManager_->getHeight() * 32.0f;
-
-        x = std::clamp(x, 0.0f, mapWidth - width);
-        y = std::clamp(y, 0.0f, mapHeight - height);
-
-
-        float obctacleLeft = j * 32;
-        float obctacleRight = (j + 1) * 32;
-        float obctacleTop = i * 32;
-        float obctacleBottom = (i + 1) * 32;
-
-        float PlayerLeft = x;
-        float PlayerRight = x + width;
-        float PlayerTop = y;
-        float PlayerBottom = y + height;
-
-        float overlapLeft = PlayerRight - obctacleLeft;
-        float overlapRight = obctacleRight - PlayerLeft;
-        float overlapTop = PlayerBottom - obctacleTop;
-        float overlapBottom = obctacleBottom - PlayerTop;
-
-        float minOverlap = std::min({ overlapLeft, overlapRight, overlapTop, overlapBottom });
-
-        if (minOverlap == overlapLeft) {
-          x = obctacleLeft - width;
-        }
-        else if (minOverlap == overlapRight) {
-          x = obctacleRight;
-        }
-        else if (minOverlap == overlapTop) {
-          y = obctacleTop - height;
-        }
-        else if (minOverlap == overlapBottom) {
-          y = obctacleBottom;
-        }
-      }
-    }
-  }
-}
 
 void Player::setWeapon(std::unique_ptr<Weapon> weapon)
 {
@@ -197,12 +178,11 @@ void Player::setWeapon(std::unique_ptr<Weapon> weapon)
 void Player::attack(const sf::Vector2f& targetPos)
 {
   if (currentWeapon) {
-    // Смещаем точку спавна стрелы вперёд по направлению выстрела
     sf::Vector2f direction = targetPos - sf::Vector2f(x, y);
     float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
     if (length > 0) direction /= length;
 
-    sf::Vector2f spawnPos = sf::Vector2f(x, y) + direction * 20.f; // 20 пикселей от центра
+    sf::Vector2f spawnPos = sf::Vector2f(x, y) + direction * 20.f;
     currentWeapon->attack(spawnPos, targetPos);
   }
 }
