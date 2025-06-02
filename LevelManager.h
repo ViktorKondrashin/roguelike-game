@@ -25,7 +25,7 @@ private:
 
   sf::Texture tileset_;
   std::unordered_map<char, sf::IntRect> tileTextures_;
-  sf::IntRect getPathVariant(int x, int y) const;
+  sf::IntRect getPathVariant(char tileType, int x, int y) const;
 
   std::unordered_map<char, std::vector<sf::IntRect>> randomTileVariants_;
 

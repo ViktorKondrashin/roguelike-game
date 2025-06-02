@@ -7,6 +7,9 @@ class Monster; // Форвард-декларация
 
 class Weapon {
 public:
+  float attackSpeed;
+  int damage;
+  float cooldown = 0.f;
   virtual ~Weapon() = default;
   virtual void attack(const sf::Vector2f& startPos, const sf::Vector2f& targetPos) = 0;
   virtual void update(float deltaTime) = 0;

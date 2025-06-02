@@ -28,12 +28,17 @@ void RoomManager::update(float deltaTime) {
   }
 }
 
-void RoomManager::draw(sf::RenderWindow& window) {
-  if (!isActive) return;
+void RoomManager::draw(sf::RenderWindow& window)
+{
+    if (!isActive) return;
 
-  for (auto& monster : waveManager.monsters) 
-    window.draw(monster->sprite);
-  
+    // статические объекты
+    for (auto& obstacle : staticObstacles)
+        obstacle->draw(window);
+
+    // все монстры (теперь у каждого вызовется свой draw)
+    for (auto& monster : waveManager.monsters)
+        monster->draw(window);
 }
 
 void RoomManager::drawUI(sf::RenderWindow& window, const sf::View& view) {
@@ -134,6 +139,10 @@ std::vector<std::shared_ptr<Entity>> RoomManager::getAllEntities() const {
 void RoomManager::updateCollisions() {
   auto entities = getAllEntities();
 
+  for (const auto& obstacle : staticObstacles) {
+    entities.push_back(std::static_pointer_cast<Entity>(obstacle));
+  }
+
   for (size_t i = 0; i < entities.size(); ++i) {
     for (size_t j = i + 1; j < entities.size(); ++j) {
       if (entities[i] && entities[j] && entities[i]->checkCollision(entities[j].get())) {
@@ -142,4 +151,8 @@ void RoomManager::updateCollisions() {
       }
     }
   }
+}
+
+void RoomManager::addStaticObstacle(std::shared_ptr<StaticObstacle> obstacle) {
+  staticObstacles.push_back(obstacle);
 }

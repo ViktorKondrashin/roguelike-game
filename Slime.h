@@ -1,15 +1,15 @@
 #pragma once
 #include "Monster.h"
-#include "GameUtils.h"
 
 class Slime : public Monster {
 public:
-  Slime(float x, float y, float w, float h, std::string texturePath, Player* player);
+  Slime(float x, float y, float w, float h, std::string texturePath, Player* player, LevelManager* lvlMgr);
   void update(float time) override;
   void draw(sf::RenderWindow& window) const override;
   void startDying();
 
 private:
+  float prevX = 0.f, prevY = 0.f;
   void updateMovement(float time);
   void updateAttack(float time);
   void setTarget(Player* player);

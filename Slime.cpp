@@ -1,9 +1,9 @@
-#include "Slime.h"
+п»ї#include "Slime.h"
 #include "Player.h" 
 #include <iostream>
 
-Slime::Slime(float x, float y, float w, float h, std::string texturePath, Player* player) :
-  Monster(x, y, w, h, texturePath, player)
+Slime::Slime(float x, float y, float w, float h, std::string texturePath, Player* player, LevelManager* lvlMgr) :
+  Monster(x, y, w, h, texturePath, player, lvlMgr)
 {
   damage = 10;
   reward = 5;
@@ -11,84 +11,78 @@ Slime::Slime(float x, float y, float w, float h, std::string texturePath, Player
   speed = 0.05f;
   hp = 30;
 
-  // Загрузка текстур смерти
-  if (!deathTexture.loadFromFile("image/slime_death.png")) {
-    std::cerr << "Failed to load slime death texture!" << std::endl;
-  }
-  deathSprite.setTexture(deathTexture);
-  deathSprite.setOrigin(w / 2, h / 2);
-
+  
   frames = {
-    //кадры движения
-      //Вниз
+    //РєР°РґСЂС‹ РґРІРёР¶РµРЅРёСЏ
+      //Р’РЅРёР·
         sf::IntRect(0, 0, 23, 20), 
         sf::IntRect(25, 0, 21, 20),
-      //Влево-вниз
+      //Р’Р»РµРІРѕ-РІРЅРёР·
         sf::IntRect(0, 23, 23, 15),
         sf::IntRect(24, 21, 23, 17),
-      //Влево
+      //Р’Р»РµРІРѕ
         sf::IntRect(0, 39, 24, 19), 
         sf::IntRect(27, 40, 23, 19),
-      //Влево-вверх
+      //Р’Р»РµРІРѕ-РІРІРµСЂС…
         sf::IntRect(0, 59, 23, 20),
         sf::IntRect(26, 60, 22, 19), 
-      //Вверх
+      //Р’РІРµСЂС…
         sf::IntRect(0, 81, 23, 20),
         sf::IntRect(26, 81, 21, 20),
-      //Вправо-вниз
+      //Р’РїСЂР°РІРѕ-РІРЅРёР·
         sf::IntRect(23, 23, -23, 15),
         sf::IntRect(47, 21, -23, 17),
-      //Вправо
+      //Р’РїСЂР°РІРѕ
         sf::IntRect(24, 39, -24, 19),
         sf::IntRect(50, 40, -23, 19),
-      //Вправо-вверх
+      //Р’РїСЂР°РІРѕ-РІРІРµСЂС…
         sf::IntRect(23, 59, -23, 20),
         sf::IntRect(48, 60, -22, 19),
 
-    //кадры атаки
-      //вниз
+    //РєР°РґСЂС‹ Р°С‚Р°РєРё
+      //РІРЅРёР·
         sf::IntRect(0, 102, 23, 18),
         sf::IntRect(25, 102, 37, 57),
         sf::IntRect(63, 102, 37, 61),
         sf::IntRect(103, 102, 33, 57),
         sf::IntRect(137, 101, 23, 18), 
-      //вниз-влево
+      //РІРЅРёР·-РІР»РµРІРѕ
         sf::IntRect(0, 162, 23, 21),
         sf::IntRect(26, 163, 42, 26),
         sf::IntRect(68, 164, 41, 41),
         sf::IntRect(112, 164, 23, 41),
         sf::IntRect(0, 23, 23, 17),
-      //влево
+      //РІР»РµРІРѕ
         sf::IntRect(0, 207, 25, 19),
         sf::IntRect(29, 207, 40, 19),
         sf::IntRect(70, 207, 59, 19),
         sf::IntRect(130, 207, 36, 23),
         sf::IntRect(169, 207, 25, 19),
-      //вверх-влево
+      //РІРІРµСЂС…-РІР»РµРІРѕ
         sf::IntRect(0, 232, 23, 21),
         sf::IntRect(26, 231, 43, 26),
         sf::IntRect(69, 231, 41, 41),
         sf::IntRect(112, 231, 24, 41),
         sf::IntRect(138, 23, 23, 20),
-      //вверх
+      //РІРІРµСЂС…
         sf::IntRect(0, 272, 22, 20),
         sf::IntRect(23, 272, 37, 57),
         sf::IntRect(65, 272, 37, 61),
         sf::IntRect(103, 272, 32, 57),
         sf::IntRect(138, 271, 22, 20),
-      //вниз-вправо
+      //РІРЅРёР·-РІРїСЂР°РІРѕ
         sf::IntRect(23, 162, -23, 21),
         sf::IntRect(68, 163, -42, 26),
         sf::IntRect(109, 164, -41, 41),
         sf::IntRect(135, 164, -23, 41),
         sf::IntRect(137, 162, -23, 17),
-      //вправо
+      //РІРїСЂР°РІРѕ
         sf::IntRect(25, 207, -25, 19),
         sf::IntRect(69, 207, -40, 19),
         sf::IntRect(129, 207, -59, 19),
         sf::IntRect(166, 207, -36, 23),
         sf::IntRect(194, 207, 25, -19),
-      //вверх-вправо
+      //РІРІРµСЂС…-РІРїСЂР°РІРѕ
         sf::IntRect(23, 232, -23, 21),
         sf::IntRect(68, 231, -45, 26),
         sf::IntRect(110, 231, -41, 41),
@@ -96,49 +90,49 @@ Slime::Slime(float x, float y, float w, float h, std::string texturePath, Player
         sf::IntRect(161, 231, -23, 20),
   };
   attackOrigins = {
-     //вниз
+     //РІРЅРёР·
         sf::Vector2f{7,8},
         sf::Vector2f{12,5},
         sf::Vector2f{9,5},
         sf::Vector2f{10,4},
         sf::Vector2f{7,6},
-      //вниз-влево
+      //РІРЅРёР·-РІР»РµРІРѕ
         sf::Vector2f{3,13},
         sf::Vector2f{23,9},
         sf::Vector2f{24,8},
         sf::Vector2f{4,8},
         sf::Vector2f{3,9},
-     //влево
+     //РІР»РµРІРѕ
         sf::Vector2f{5,7},
         sf::Vector2f{21,7},
         sf::Vector2f{40,6},
         sf::Vector2f{17,7},
         sf::Vector2f{5,7},
-      //вверх-влево
+      //РІРІРµСЂС…-РІР»РµРІРѕ
         sf::Vector2f{7,7},
         sf::Vector2f{33,18},
         sf::Vector2f{31,34},
         sf::Vector2f{11,34},
         sf::Vector2f{11,13},
-      //вверх
+      //РІРІРµСЂС…
         sf::Vector2f{12,8},
         sf::Vector2f{22,45},
         sf::Vector2f{15,49},
         sf::Vector2f{12,45},
         sf::Vector2f{12,8},
-      //вниз-вправо
+      //РІРЅРёР·-РІРїСЂР°РІРѕ
         sf::Vector2f{12,13},
         sf::Vector2f{12,9},
         sf::Vector2f{12,8},
         sf::Vector2f{12,8},
         sf::Vector2f{12,9},
-      //вправо
+      //РІРїСЂР°РІРѕ
         sf::Vector2f{12,7},
         sf::Vector2f{12,7},
         sf::Vector2f{12,6},
         sf::Vector2f{12,7},
         sf::Vector2f{12,7},
-      //вверх-вправо
+      //РІРІРµСЂС…-РІРїСЂР°РІРѕ
         sf::Vector2f{12,7},
         sf::Vector2f{12,13},
         sf::Vector2f{12,29},
@@ -148,24 +142,56 @@ Slime::Slime(float x, float y, float w, float h, std::string texturePath, Player
 }
 
 void Slime::startDying() {
-  if (isDying) return;
-  isDying = true;
-  canCollide = false;
-  deathSprite.setPosition(x + width / 2, y + height / 2);
-  // Можно добавить звук смерти здесь
+    if (isDying) return;
+    isDying = true;
+    canCollide = false;
+
+    // РєРѕРїРёСЂСѓРµРј РёРјРµРЅРЅРѕ С‚РµРєСѓС‰РёР№ СЃРїСЂР°Р№С‚ (СЃ Р°РЅРёРјР°С†РёРѕРЅРЅРѕР№ СЂР°РјРєРѕР№)
+    deathSprite = sprite;
+    // origin СѓР¶Рµ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РЅР°СЃС‚СЂРѕРµРЅ Сѓ sprite, РЅРѕ СѓР±РµРґРёРјСЃСЏ:
+    deathSprite.setOrigin(width / 2.0f, height / 2.0f);
+    // РїРѕР·РёС†РёСЏ вЂ” С‚РѕР¶Рµ РІР·СЏС‚СЊ РёР· С‚РµРєСѓС‰РµР№:
+    deathSprite.setPosition(x + width / 2.0f, y + height / 2.0f);
+    // (РµСЃР»Рё С…РѕС‚РёРј вЂ” СЃСЋРґР° Р¶Рµ РјРѕР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ Р·РІСѓРє СЃРјРµСЂС‚Рё)
 }
+
+
 
 void Slime::update(float time) {
   if (!life) return;
+
+  prevX = x;  prevY = y;
 
   if (isDying) {
     deathTimer += time;
     if (deathTimer >= deathDuration) {
       life = false;
-      // Здесь можно добавить дроп предметов
+      // Р—РґРµСЃСЊ РјРѕР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ РґСЂРѕРї РїСЂРµРґРјРµС‚РѕРІ
       target->addMoney(reward);
     }
     return;
+  }
+  bool chasing = updateAI(time);          // РІС‹Р·РІР°Р»Рё Р±Р°Р·РѕРІСѓСЋ РјР°С€РёРЅСѓ СЃРѕСЃС‚РѕСЏРЅРёР№
+
+  if (!chasing) {
+      /* РІ Р±Р°Р·РѕРІРѕРј AI РјРѕРЅСЃС‚СЂ СѓР¶Рµ РјРѕРі РїСЂРѕР№С‚Рё РїР°СЂСѓ-С‚СЂРѕР№РєСѓ РїРёРєСЃРµР»РµР№ вЂ”
+         Р±РµСЂС‘Рј РІРµРєС‚РѕСЂ С„Р°РєС‚РёС‡РµСЃРєРѕРіРѕ СЃРґРІРёРіР° */
+      dx = x - prevX;
+      dy = y - prevY;
+
+      /* Р°РЅРёРјР°С†РёСЏ (РґРІР° С€Р°РіР°) */
+      frameTime += time;
+      if (frameTime >= frameDuration) {
+          frameTime = 0.f;
+          currentFrame = 1.f - currentFrame;          // 0 в†” 1
+      }
+      int row = getAnimationRow();
+      sprite.setTextureRect(frames[row * 2 + static_cast<int>(currentFrame)]);
+      sprite.setOrigin(12, 10);
+
+      interactWithMap();
+      sprite.setPosition(x, y);
+      return;                     // РЅРёС‡РµРіРѕ Р±РѕР»СЊС€Рµ РЅРµ РґРµР»Р°РµРј
   }
 
   setTargetPosition(target->getPosition());
@@ -175,22 +201,25 @@ void Slime::update(float time) {
 
   updateMovement(time);
   updateAttack(time);
+  interactWithMap();
   sprite.setPosition(x, y);
 }
 
 void Slime::draw(sf::RenderWindow& window) const {
-  if (!life) return;
+    if (!life) return;
 
-  if (isDying) {
-    // Анимация растворения
-    sf::Sprite tempSprite = deathSprite;
-    tempSprite.setColor(sf::Color(255, 255, 255, 255 * (1 - deathTimer / deathDuration)));
-    window.draw(tempSprite);
-  }
-  else {
-    Entity::draw(window);
-  }
+    if (isDying) {
+        // РђРЅРёРјР°С†РёСЏ В«СЂР°СЃС‚РІРѕСЂРµРЅРёСЏВ» (ghost-style)
+        sf::Sprite tempSprite = deathSprite;
+        float alpha = 1.0f - (deathTimer / deathDuration);
+        tempSprite.setColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(255 * alpha)));
+        window.draw(tempSprite);
+    }
+    else {
+        Entity::draw(window);
+    }
 }
+
 void Slime::updateMovement(float time) {
   if (!life || isAttacking) return;
 
@@ -202,13 +231,13 @@ void Slime::updateMovement(float time) {
     y += dy * speed * time * 1000;
   }
 
-  // Анимация движения
+  // РђРЅРёРјР°С†РёСЏ РґРІРёР¶РµРЅРёСЏ
   frameTime += time;
   if (frameTime >= frameDuration) {
     frameTime = 0; currentFrame += 1;
     if (currentFrame >= 2) {
       currentFrame = 0;
-    }   // Цикл 0-1
+    }   // Р¦РёРєР» 0-1
   }
 
   int row = getAnimationRow();
@@ -221,41 +250,41 @@ void Slime::updateAttack(float time) {
 
   float distanceToPlayer = std::hypot(targetPosition.x - x, targetPosition.y - y);
 
-  // Начало атаки
+  // РќР°С‡Р°Р»Рѕ Р°С‚Р°РєРё
   if (!isAttacking && distanceToPlayer <= attackRange && currentCooldown <= 0) {
     isAttacking = true;
     currentAttackStage = 0;
     currentAttackStageTime = attackWindup;
   }
 
-  // Обработка атаки
+  // РћР±СЂР°Р±РѕС‚РєР° Р°С‚Р°РєРё
   if (isAttacking) {
     currentAttackStageTime -= time;
 
-    // Переход между стадиями атаки
+    // РџРµСЂРµС…РѕРґ РјРµР¶РґСѓ СЃС‚Р°РґРёСЏРјРё Р°С‚Р°РєРё
     if (currentAttackStageTime <= 0) {
       currentAttackStage++;
 
       switch (currentAttackStage) {
-      case 1: // Переход в стадию удара
+      case 1: // РџРµСЂРµС…РѕРґ РІ СЃС‚Р°РґРёСЋ СѓРґР°СЂР°
         currentAttackStageTime = attackStrike;
         if (Collision::PixelPerfectTest(sprite, target->getSprite())) {
           target->takeDamage(damage);
         }
         break;
 
-      case 2: // Переход в стадию восстановления
+      case 2: // РџРµСЂРµС…РѕРґ РІ СЃС‚Р°РґРёСЋ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёСЏ
         currentAttackStageTime = attackRecovery;
         break;
 
-      case 3: // Завершение атаки
+      case 3: // Р—Р°РІРµСЂС€РµРЅРёРµ Р°С‚Р°РєРё
         isAttacking = false;
         currentCooldown = attackCooldown;
         break;
       }
     }
 
-    // Анимация атаки
+    // РђРЅРёРјР°С†РёСЏ Р°С‚Р°РєРё
     int attackFrame = getAttackFrame();
     sprite.setTextureRect(frames[16 + getAnimationRow() * 5 + attackFrame]);
     sprite.setOrigin(attackOrigins[getAnimationRow() * 5 + attackFrame]);
@@ -268,12 +297,12 @@ int Slime::getAttackFrame() const {
   switch (currentAttackStage) {
   case 0: // Windup
     progress = 1.f - (currentAttackStageTime / attackWindup);
-    return static_cast<int>(progress * 2); // Кадры 0-1
+    return static_cast<int>(progress * 2); // РљР°РґСЂС‹ 0-1
   case 1: // Strike
-    return 2; // Главный кадр удара
+    return 2; // Р“Р»Р°РІРЅС‹Р№ РєР°РґСЂ СѓРґР°СЂР°
   case 2: // Recovery
     progress = 1.f - (currentAttackStageTime / attackRecovery);
-    return 3 + static_cast<int>(progress * 1); // Кадры 3-4
+    return 3 + static_cast<int>(progress * 1); // РљР°РґСЂС‹ 3-4
   }
 
   return 0;
@@ -291,13 +320,13 @@ int Slime::getAnimationRow() const {
   float angle = std::atan2(dy, dx) * 180 / 3.14159265f;
   if (angle < 0) angle += 360.f;
 
-  // Определяем направление (как у игрока)
-  if (angle >= 112.5f && angle < 157.5f)  return 1;  // Вниз-влево 
-  else if (angle >= 67.5f && angle < 112.5f) return 0;  // Вниз 
-  else if (angle >= 157.5f && angle < 202.5f) return 2; // Влево 
-  else if (angle >= 202.5f && angle < 247.5f) return 3; // Вверх-влево   
-  else if (angle >= 247.5f && angle < 292.5f) return 4; // Вверх 
-  else if (angle >= 292.5f && angle < 337.5f) return 7;  // Вверх-вправо  
-  else if (angle >= 337.5f || angle < 22.5f) return 6; // вправо 
-  return 5; // Вниз-Вправо
+  // РћРїСЂРµРґРµР»СЏРµРј РЅР°РїСЂР°РІР»РµРЅРёРµ (РєР°Рє Сѓ РёРіСЂРѕРєР°)
+  if (angle >= 112.5f && angle < 157.5f)  return 1;  // Р’РЅРёР·-РІР»РµРІРѕ 
+  else if (angle >= 67.5f && angle < 112.5f) return 0;  // Р’РЅРёР· 
+  else if (angle >= 157.5f && angle < 202.5f) return 2; // Р’Р»РµРІРѕ 
+  else if (angle >= 202.5f && angle < 247.5f) return 3; // Р’РІРµСЂС…-РІР»РµРІРѕ   
+  else if (angle >= 247.5f && angle < 292.5f) return 4; // Р’РІРµСЂС… 
+  else if (angle >= 292.5f && angle < 337.5f) return 7;  // Р’РІРµСЂС…-РІРїСЂР°РІРѕ  
+  else if (angle >= 337.5f || angle < 22.5f) return 6; // РІРїСЂР°РІРѕ 
+  return 5; // Р’РЅРёР·-Р’РїСЂР°РІРѕ
 }

@@ -6,6 +6,8 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <memory>
+#include "InteractionHint.h"
+#include "StaticObstacle.h"
 
 class RoomManager {
 public:
@@ -20,12 +22,15 @@ public:
   bool isWaiting() const;
   float getRemainingDelay() const;
   const std::vector<std::shared_ptr<Monster>>& getMonsters() const { return waveManager.monsters; }
+  void addStaticObstacle(std::shared_ptr<StaticObstacle> obstacle);
 
 private:
   Player* player = nullptr;
   LevelManager* level = nullptr;
   WaveManager waveManager;
   bool isActive = false;
+  InteractionHint interactionHint;
+  bool isPlayerNearChest = false;
 
   sf::Text waveText;
   sf::Font font;
@@ -33,6 +38,7 @@ private:
   sf::Text roomClearedText;
 
   void initUI();
+  std::vector<std::shared_ptr<StaticObstacle>> staticObstacles;
   std::vector<std::shared_ptr<Entity>> getAllEntities() const;
   void updateCollisions();
 };

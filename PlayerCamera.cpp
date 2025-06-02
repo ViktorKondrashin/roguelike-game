@@ -1,6 +1,6 @@
 #include "PlayerCamera.h"
 #include <algorithm>
-sf::View Player—amera::getViewForPlayer(float playerX, float playerY, const LevelManager& LevelManager, float screenWidth, float screenHeight) {
+sf::View PlayerCamera::getViewForPlayer(float playerX, float playerY, const LevelManager& LevelManager, float screenWidth, float screenHeight) {
   sf::View view;
   float halfWidth = screenWidth / 2;
   float halfHeight = screenHeight / 2;
