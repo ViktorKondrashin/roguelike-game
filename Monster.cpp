@@ -4,13 +4,12 @@
 #include <random>
 #include <cmath>
 
-/*======================== ctor: запоминаем homePos ======================*/
 Monster::Monster(float x,float y,float w,float h,
                  std::string texPath,Player* p,LevelManager* lvl)
   : Entity(x,y,w,h,texPath,lvl), damage(0), reward(0),
     attackCooldown(0), currentCooldown(0), target(p)
 {
-    homePos = { x, y };                 // ⬅️  ТОЧКА ОЖИДАНИЯ
+    homePos = { x, y };
     setTargetPosition(p->getPosition());
 }
 
@@ -19,13 +18,12 @@ void Monster::setTargetPosition(const sf::Vector2f& pos)
     targetPosition = pos;
 }
 
-/*===================== вспом. точка блуждания ===========================*/
 void Monster::chooseNewWanderTarget()
 {
     std::uniform_real_distribution<float> angDist(0.f, 6.2831853f);
     std::uniform_real_distribution<float> rDist(20.f, WANDER_RADIUS);
 
-    for (int tries = 0; tries < 10; ++tries) {          // ищем проходимую
+    for (int tries = 0; tries < 10; ++tries) {
         float ang = angDist(rng);
         float rad = rDist(rng);
         sf::Vector2f p = homePos + sf::Vector2f(std::cos(ang)*rad,
@@ -37,10 +35,9 @@ void Monster::chooseNewWanderTarget()
             return;
         }
     }
-    wanderTarget = homePos;           // fallback
+    wanderTarget = homePos;
 }
 
-/*====================== Waiting-фаза (бродим) ===========================*/
 bool Monster::updateWaiting(float dt)
 {
     float distToPl = std::hypot(target->x - x, target->y - y);
@@ -48,7 +45,7 @@ bool Monster::updateWaiting(float dt)
 
     phaseTimer -= dt;
 
-    if (movePhase) {                  // 3 с двигаемся
+    if (movePhase) {
         sf::Vector2f dir = wanderTarget - sf::Vector2f(x, y);
         float d = std::hypot(dir.x, dir.y);
         if (d > 2.f) { dir /= d; x += dir.x*speed*dt*1000; y += dir.y*speed*dt*1000; }
@@ -57,17 +54,16 @@ bool Monster::updateWaiting(float dt)
             phaseTimer  = IDLE_PHASE;
         }
     }
-    else {                            // 3 с стоим
+    else {
         if (phaseTimer <= 0.f) {
             movePhase  = true;
             phaseTimer = MOVE_PHASE;
             chooseNewWanderTarget();
         }
     }
-    return false;                     // преследовать НЕ надо
+    return false;
 }
 
-/*===================== Returning-фаза (домой) ===========================*/
 bool Monster::updateReturning(float dt)
 {
     float distToPl = std::hypot(target->x - x, target->y - y);
@@ -76,7 +72,7 @@ bool Monster::updateReturning(float dt)
     sf::Vector2f dir = homePos - sf::Vector2f(x, y);
     float d = std::hypot(dir.x, dir.y);
     if (d > 2.f) { dir /= d; x += dir.x*speed*dt*1000; y += dir.y*speed*dt*1000; }
-    else {                             // дошли
+    else {
         aiState   = AIState::Waiting;
         movePhase = false;
         phaseTimer=0.f;
@@ -84,7 +80,6 @@ bool Monster::updateReturning(float dt)
     return false;
 }
 
-/*====================== общий апдейт AI =================================*/
 bool Monster::updateAI(float dt)
 {
     switch (aiState)
@@ -93,7 +88,7 @@ bool Monster::updateAI(float dt)
         case AIState::Chasing: {
             float dist = std::hypot(target->x - x, target->y - y);
             if (dist > LOST_RADIUS) { aiState = AIState::Returning; return updateReturning(dt); }
-            return true;          // продолжаем обычное поведение
+            return true;
         }
         case AIState::Returning:  return updateReturning(dt);
     }

@@ -4,7 +4,6 @@ Button::Button(const std::string& text, const sf::Font& font, sf::Vector2f size)
   : text(text, font, 24) {
   shape.setSize(size);
 
-  // Default colors
   textColor = sf::Color::White;
   idleColor = sf::Color(70, 70, 70);
   hoverColor = sf::Color(150, 150, 150);

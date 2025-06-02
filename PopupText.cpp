@@ -10,8 +10,8 @@ PopupText::PopupText(const std::string& message, sf::Vector2f position, const sf
 
 void PopupText::update(float deltaTime) {
   currentTime += deltaTime;
-  text.move(0, -50 * deltaTime); // Движение вверх
-  text.setFillColor(sf::Color(0, 255, 0, 255 * (1 - currentTime / lifetime))); // Постепенное исчезновение
+  text.move(0, -50 * deltaTime);
+  text.setFillColor(sf::Color(0, 255, 0, 255 * (1 - currentTime / lifetime)));
 }
 
 bool PopupText::isDone() const {

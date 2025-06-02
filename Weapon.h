@@ -3,7 +3,7 @@
 #include <memory>
 
 class Entity;
-class Monster; // Форвард-декларация
+class Monster;
 
 class Weapon {
 public:

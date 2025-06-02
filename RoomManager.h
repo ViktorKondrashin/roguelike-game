@@ -11,12 +11,14 @@
 
 class RoomManager {
 public:
+  bool isPlayerNearExit() const;
   void init(Player* player, LevelManager* level);
   void update(float deltaTime);
   void draw(sf::RenderWindow& window);
   void drawUI(sf::RenderWindow& window, const sf::View& view);
   void loadRoom(const std::string& roomName);
   bool isRoomCleared() const;
+  void resetWaves() { waveManager.currentWaveIndex = 1; }
   int getCurrentWaveIndex() const;
   int getTotalWaves() const;
   bool isWaiting() const;
@@ -25,6 +27,8 @@ public:
   void addStaticObstacle(std::shared_ptr<StaticObstacle> obstacle);
 
 private:
+  bool exitUnlocked_ = false;
+  float waitTimer_ = 0.f;
   Player* player = nullptr;
   LevelManager* level = nullptr;
   WaveManager waveManager;

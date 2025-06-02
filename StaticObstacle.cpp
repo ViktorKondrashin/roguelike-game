@@ -32,14 +32,11 @@ void StaticObstacle::setInteractionCallback(InteractionCallback callback) {
   interactionCallback = callback;
 }
 
-// StaticObstacle.cpp
 void StaticObstacle::checkPlayerInteraction(const sf::Vector2f& playerPosition) {
   if (!isInteractable) return;
 
-  // Используем точные границы объекта для взаимодействия
   sf::FloatRect bounds = getGlobalBounds();
 
-  // Небольшая зона вокруг объекта для взаимодействия
   float interactionMargin = 20.f;
   bounds.left -= interactionMargin;
   bounds.top -= interactionMargin;
@@ -57,7 +54,7 @@ void StaticObstacle::setInteractable(bool interactable) {
 
 sf::FloatRect StaticObstacle::getInteractionBounds() const {
   sf::FloatRect bounds = getGlobalBounds();
-  float margin = 20.f; // Отступ для зоны взаимодействия
+  float margin = 20.f;
   bounds.left -= margin;
   bounds.top -= margin;
   bounds.width += margin * 2;
@@ -66,10 +63,8 @@ sf::FloatRect StaticObstacle::getInteractionBounds() const {
 }
 
 sf::FloatRect StaticObstacle::getGlobalBounds() const {
-  // Берём позицию спрайта (левый верхний угол)
   sf::Vector2f pos = sprite.getPosition();
 
-  // Возвращаем прямоугольник с кастомными размерами
   return sf::FloatRect(pos.x, pos.y, customWidth, customHeight);
 }
 

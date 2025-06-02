@@ -11,24 +11,24 @@ private:
     int x, y;
     std::string type;
   };
-  float waveDelay = 0.f;  // Таймер паузы
+  float waveDelay = 0.f;
   bool isWaitingBetweenWaves = false; 
   Player* player = nullptr;
 
 
 public:
-  void loadRoomWaves(const std::string& roomBaseName); // NEW: Загружает все волны комнаты
-  void spawnNextWave(Player* player);         // NEW: Переименовано из spawnCurrentWave
+  void loadRoomWaves(const std::string& roomBaseName);
+  void spawnNextWave(Player* player);
   bool isWaveCleared() const;
-  bool areAllWavesDone() const;               // NEW: Проверка окончания всех волн
+  bool areAllWavesDone() const;
   void startNextWave(Player* player);
-  void update(float deltaTime);  // Обновляет таймер
-  bool isWaiting() const;        // Проверка паузы
+  void update(float deltaTime);
+  bool isWaiting() const;
   int getCurrentWaveIndex() const { return currentWaveIndex; }
   int getTotalWaves() const { return waves.size(); }
   float getRemainingDelay() const { return waveDelay; }
 
-  std::vector<std::vector<SpawnPoint>> waves; // NEW: Все волны комнаты
-  size_t currentWaveIndex = 0;                // NEW: Текущая волна
+  std::vector<std::vector<SpawnPoint>> waves;
+  size_t currentWaveIndex = 0;
   std::vector<std::shared_ptr<Monster>> monsters;
 };

@@ -16,21 +16,18 @@ private:
   int getAnimationRow() const;
   int getAttackFrame() const;
 
-  // Анимационные параметры
   float frameTime = 0.0f;
   float currentFrame = 0;
   const float frameDuration = 0.2f;
   std::vector<sf::IntRect> frames;
   std::vector<sf::Vector2f> attackOrigins;
 
-  // Параметры смерти
   sf::Texture deathTexture;
   sf::Sprite deathSprite;
   float deathTimer = 0.0f;
   const float deathDuration = 0.5f;
   bool isDying = false;
 
-  // Параметры атаки
   float attackRange = 30.0f;
   bool isAttacking = false;
   float attackTimer = 0.0f;

@@ -4,20 +4,22 @@
 #include <unordered_map>
 #include <SFML/Graphics.hpp>
 #include <fstream>
+#include <optional>
 
 /*
-    обозначения тайлов  
-       '0' - стена
-       'w' - вода (непроходимый тайл)
+    обозначения тайлов
+       'w' - вода (непроходимый простреливаемый тайл)
        ' ' - трава (базовый проходимый тайл)
        '=' - тропинка (проходимая)
        'f' - цветы (проходимые)
-       's' - сокровище
-       'l' - ловушка
+       'b' - кусты (непроходимый непростреливаемый тайл)
  */
 
 class LevelManager {
 private:
+
+  std::vector<sf::Vector2i> exitBlocks_;
+
   std::vector<std::string> levelData_;
 
   int width_ = 0;
@@ -31,7 +33,13 @@ private:
 
   sf::IntRect getRandomTileVariant(char tileType) const;
 
+
 public:
+  const std::vector<sf::Vector2i>& getExitBlocks() const { return exitBlocks_; }
+
+  void unlockExits();
+
+  std::optional<sf::Vector2i> findTile(char tile) const;
   explicit LevelManager(const std::vector<std::string>& levelData = {});
   bool loadFromFile(const std::string& filePath);
 
@@ -44,17 +52,12 @@ public:
   bool isWall(int x, int y)const;
   bool isWalkable(int x, int y) const;
   bool isShootable(int x, int y) const;
-  // Проверяет, можно ли спавнить монстра на клетке
   bool isSpawnable(int x, int y) const {
     return isWalkable(x, y);
   }
 
-  // Находит случайную свободную клетку в радиусе
   std::pair<int, int> findNearbyWalkable(int x, int y, int radius = 1) const;
 
   int getWidth() const { return width_; }
   int getHeight() const { return height_; }
-
-
-
 };

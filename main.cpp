@@ -1,10 +1,8 @@
-﻿#include <SFML/Graphics.hpp>
-#include "GameManager.h"
+﻿#include "GameManager.h"
+#include <SFML/Graphics.hpp>
 
 int main() {
-  // 1. Создаём окно 800×600
   sf::RenderWindow window(sf::VideoMode(800, 600), "Roguelike");
-  // 2. Получаем единственный экземпляр GameManager и инициализируем его
   GameManager& game = GameManager::getInstance();
   game.initialize(window);
 
@@ -13,44 +11,38 @@ int main() {
     float deltaTime = clock.restart().asSeconds();
     sf::Event event;
 
-    // 3. Обрабатываем все события
     while (window.pollEvent(event)) {
-      // 3.1. Если закрывают окно системным крестиком
       if (event.type == sf::Event::Closed) {
-        // Перед закрытием сохраняем профиль (если он был выбран)
         game.saveProfiles();
         window.close();
-        break; // выходим из внутреннего while и завершение цикла
+        break;
       }
-
-      // 3.2. Передаём все события в GameManager
       game.handleEvent(event);
 
-      // 3.3. Дополнительная логика: Space и Escape
       if (event.type == sf::Event::KeyPressed) {
-        // 3.3.1. Нажатие Space: если мы в LOBBY, стартуем раунд
+        auto& game = GameManager::getInstance();
+
         if (event.key.code == sf::Keyboard::Space &&
           game.getCurrentState() == GameManager::GameState::LOBBY) {
           game.startRun();
         }
+
+        if (event.key.code == sf::Keyboard::Escape) {
+          game.togglePause();
+        }
       }
 
-      // 3.4. Клик мыши: проверка Play/Exit в главном меню
       if (event.type == sf::Event::MouseButtonPressed) {
-        // Переводим координаты пикселя в координаты default view (GUI)
         sf::Vector2f mousePos = window.mapPixelToCoords(
           sf::Mouse::getPosition(window),
           window.getDefaultView()
         );
 
-        // Если мы на главном меню — ещё раз проверяем Play/Exit
         if (game.getCurrentState() == GameManager::GameState::MAIN_MENU) {
           if (game.isPlayClicked(mousePos)) {
-            // Нажатие Play: переходим к выбору профиля
             game.startProfileSelect();
           }
           else if (game.isExitClicked(mousePos)) {
-            // Нажатие Exit: сразу сохраняем и закрываем
             game.saveProfiles();
             window.close();
           }
@@ -58,11 +50,8 @@ int main() {
       }
     }
 
-    // 4. Обновляем состояние игры
     game.update(deltaTime);
-    // 5. Отрисовываем
     game.render(window);
-    // Не вызываем window.display() — он уже вызывается внутри game.render()
   }
 
   return 0;

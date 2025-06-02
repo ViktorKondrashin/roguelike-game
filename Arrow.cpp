@@ -8,7 +8,6 @@ Arrow::Arrow(const sf::Vector2f& position, const sf::Vector2f& target, float spe
 {
   sprite.setOrigin(texture.getSize().x / 2, texture.getSize().y / 2);
   sprite.setPosition(position);
-  // запоминаем точку старта
   startPosition = position;
 
   usePixelPerfect = true;
@@ -17,8 +16,8 @@ Arrow::Arrow(const sf::Vector2f& position, const sf::Vector2f& target, float spe
   if (length != 0) {
     direction /= length;
   }
-  canCollide = false; // На 1 кадр отключаем коллизии
-  spawnTimer = 0.1f; // 0.1 секунды "невидимости"
+  canCollide = false;
+  spawnTimer = 0.1f;
   
   velocity = direction * speed;
 
@@ -38,7 +37,7 @@ void Arrow::update(float time)
     if (spawnTimer > 0) {
         spawnTimer -= time;
         if (spawnTimer <= 0) {
-            canCollide = true; // Теперь стрела может сталкиваться
+            canCollide = true;
         }
     }
 
@@ -46,19 +45,17 @@ void Arrow::update(float time)
         for (int i = y / 32; i <= (y + height - 1) / 32; i++) {
             for (int j = x / 32; j <= (x + width - 1) / 32; j++) {
                 if (!levelManager->isShootable(j, i)) {
-                    explode(); // Уничтожаем стрелу при столкновении с непроходимым тайлом
+                    explode();
                     return;
                 }
             }
         }
     }
 
-    // перемещаем стрелу
     sprite.move(velocity * time);
-    x = sprite.getPosition().x; // Синхронизация!
+    x = sprite.getPosition().x;
     y = sprite.getPosition().y;
 
-    // проверяем, не улетела ли стрела дальше 400 пикселей от старта
     {
         float dx = x - startPosition.x;
         float dy = y - startPosition.y;
@@ -90,7 +87,7 @@ void Arrow::explode() {
 }
 
 void Arrow::onCollision(Entity* other) {
-  if (!life || !other || other == owner) return; // Важно!
+  if (!life || !other || other == owner) return;
   other->takeDamage(damage);
   explode();
 }

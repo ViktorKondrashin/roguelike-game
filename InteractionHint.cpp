@@ -21,7 +21,6 @@ void InteractionHint::loadResources() {
 void InteractionHint::update(float deltaTime, bool shouldShow) {
   bool shouldBeVisible = shouldShow && canInteract;
 
-  // Плавное появление/исчезновение
   if (shouldBeVisible) {
     fadeAlpha = std::min(1.0f, fadeAlpha + fadeSpeed * deltaTime);
   }
@@ -54,7 +53,6 @@ void InteractionHint::draw(sf::RenderWindow& window, const sf::View& view) const
     viewCenter.y + viewSize.y / 2 - 70
   );
 
-  // Применяем прозрачность
   sf::Sprite drawSprite = eKeySprite;
   drawSprite.setPosition(hintPosition);
   drawSprite.setColor(sf::Color(255, 255, 255, static_cast<sf::Uint8>(255 * fadeAlpha)));

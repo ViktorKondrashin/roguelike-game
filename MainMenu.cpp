@@ -2,18 +2,15 @@
 #include <iostream>
 
 void MainMenu::loadResources() {
-  // Загрузка фона
   if (!backgroundTex.loadFromFile("image/menu_bg.png")) {
     std::cerr << "Failed to load menu background!" << std::endl;
   }
   background.setTexture(backgroundTex);
 
-  // Загрузка шрифта
   if (!font.loadFromFile("font/minecraft_0.ttf")) {
     std::cerr << "Failed to load font!" << std::endl;
   }
 
-  // Настройка кнопки Play
   playButton.rect.setSize(sf::Vector2f(200, 60));
   playButton.rect.setPosition(300, 300);
   playButton.rect.setFillColor(sf::Color(70, 70, 70));
@@ -29,7 +26,6 @@ void MainMenu::loadResources() {
     playButton.rect.getPosition().y + playButton.rect.getSize().y / 2 - playButton.text.getLocalBounds().height / 2 - 5
   );
 
-  // Настройка кнопки Exit (аналогично)
   exitButton.rect = playButton.rect;
   exitButton.rect.setPosition(300, 400);
 
@@ -46,7 +42,7 @@ void MainMenu::loadResources() {
 void MainMenu::update(sf::Vector2f mousePos) {
   auto animateButton = [](MenuButton& button, sf::Vector2f mousePos) {
     if (button.rect.getGlobalBounds().contains(mousePos)) {
-      button.rect.setScale(1.05f, 1.05f); // Увеличение на 5%
+      button.rect.setScale(1.05f, 1.05f);
       button.text.setScale(1.05f, 1.05f);
     }
     else {

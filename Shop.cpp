@@ -31,10 +31,9 @@ void Shop::ShopItem::update(sf::Vector2f mousePos) {
   background.setOutlineColor(sf::Color::White);
   background.setFillColor(sf::Color(50, 50, 70));
 
-  // Если мышь наведена, меняем цвет обводки и фона
   if (background.getGlobalBounds().contains(mousePos)) {
     background.setOutlineColor(sf::Color::Green);
-    background.setFillColor(sf::Color(70, 70, 90)); // Небольшое затемнение при наведении
+    background.setFillColor(sf::Color(70, 70, 90));
   }
 }
 
@@ -79,7 +78,7 @@ void Shop::update(sf::Vector2f mousePos, Player& player) {
   }
 
   for (auto& item : items) {
-    item.update(mousePos); // Теперь здесь только визуальные изменения
+    item.update(mousePos);
     if (isPressed && !wasPressed && item.background.getGlobalBounds().contains(mousePos)) {
       if (player.getMoney() >= item.cost) {
         player.addMoney(-item.cost);

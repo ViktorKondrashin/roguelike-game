@@ -11,7 +11,6 @@ public:
   void update(float deltaTime) override;
   void draw(sf::RenderWindow& window) override;
   int getDamage() { return damage; }
-  // ¬озвращает константную ссылку на стрелы
   const std::vector<std::shared_ptr<Arrow>>& getArrows() const { return arrows; }
   std::vector<std::shared_ptr<Arrow>> arrows;
 

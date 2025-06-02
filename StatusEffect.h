@@ -7,10 +7,10 @@
 
 enum class StatusEffectType {
   None,
-  Burning,    // Наносит периодический урон
-  Freezing,   // Замедляет цель
-  Poisoned,   // Наносит периодический урон 
-  Stunned,    // Останавливает цель
+  Burning,
+  Freezing,
+  Poisoned,
+  Stunned,
 };
 
 struct StatusEffect {

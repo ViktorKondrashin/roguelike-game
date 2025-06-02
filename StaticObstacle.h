@@ -11,7 +11,7 @@ public:
 
   void update(float deltaTime) override;
   void draw(sf::RenderWindow& window) const override;
-  void onCollision(Entity* other) override {} // Пустая реализация
+  void onCollision(Entity* other) override {}
   void takeDamage(int damage) override;
   void startDying() override;
   sf::FloatRect getGlobalBounds() const override;
@@ -26,6 +26,6 @@ private:
   bool isInteractable = false;
   sf::Text interactHint;
   sf::Font font;
-  float customWidth = 320.f;  // Нужная ширина
-  float customHeight = 187.f; // Нужная высота
+  float customWidth = 320.f;
+  float customHeight = 187.f;
 };

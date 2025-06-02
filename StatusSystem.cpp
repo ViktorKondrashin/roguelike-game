@@ -5,11 +5,9 @@ void StatusSystem::update(sf::Time deltaTime) {
   for (auto it = activeEffects.begin(); it != activeEffects.end(); ) {
     it->timeSinceApplied += deltaTime;
 
-    // Применяем эффекты
     switch (it->type) {
     case StatusEffectType::Burning:
     case StatusEffectType::Poisoned:
-      // Наносим урон каждую секунду
       if (it->timeSinceApplied.asSeconds() >= 1.0f) {
         owner->hp -= it->intensity;
         it->timeSinceApplied = sf::Time::Zero;
@@ -19,7 +17,6 @@ void StatusSystem::update(sf::Time deltaTime) {
       break;
     }
 
-    // Удаляем истекшие эффекты
     if (it->isExpired()) {
       it = activeEffects.erase(it);
     }
@@ -31,7 +28,6 @@ void StatusSystem::update(sf::Time deltaTime) {
 
 
 void StatusSystem::applyEffect(StatusEffectType type, sf::Time duration, float intensity) {
-  // Если эффект уже есть, обновляем его длительность и интенсивность
   for (auto& effect : activeEffects) {
     if (effect.type == type) {
       effect.duration = duration;

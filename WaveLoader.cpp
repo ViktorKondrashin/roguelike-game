@@ -8,10 +8,8 @@ std::vector<MonsterWave> WaveLoader::loadFromFile(const std::string& filePath) {
     std::string line;
 
     while (std::getline(file, line)) {
-        // Пропускаем комментарии и пустые строки
         if (line.empty() || line.find("//") == 0) continue;
 
-        // Парсим строку вида (2,1):SLIME
         int x, y;
         char discard;
         std::string type;

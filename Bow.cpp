@@ -16,11 +16,6 @@ void Bow::attack(const sf::Vector2f& startPos, const sf::Vector2f& targetPos) {
 
 void Bow::update(float deltaTime) {
   cooldown -= deltaTime;
-
-  // Обновляем только живые стрелы
-  
-
-  // Удаляем мертвые стрелы
   arrows.erase(
     std::remove_if(arrows.begin(), arrows.end(),
       [](const auto& arrow) {

@@ -3,8 +3,8 @@
 #include <string>
 
 struct MonsterWave {
-  int x, y;           // Координаты (2,1)
-  std::string type;    // Тип ("SLIME")
+  int x, y;
+  std::string type;
 };
 
 class WaveLoader {

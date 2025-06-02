@@ -21,7 +21,7 @@ public:
   bool isSolid = true;
   bool canCollide = true;
   bool usePixelPerfect = true;
-  static constexpr float WALL_PENETRATION = 8.0f;
+  static constexpr float WALL_PENETRATION = 10.0f;
 
   bool isDying = false;
   float deathTimer = 0.0f;

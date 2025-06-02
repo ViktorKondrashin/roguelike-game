@@ -6,12 +6,12 @@
 void WaveManager::loadRoomWaves(const std::string& roomBaseName) {
   waves.clear();
   currentWaveIndex = 0;
-  std::cout << "Trying to load waves for room: " << roomBaseName << std::endl; // Лог
+  std::cout << "Trying to load waves for room: " << roomBaseName << std::endl;
 
   int waveNum = 1;
   while (true) {
     std::string path = "data/" + roomBaseName + "_" + std::to_string(waveNum) + ".waves";
-    std::cout << "Checking file: " << path << std::endl; // Лог
+    std::cout << "Checking file: " << path << std::endl;
     auto loadedWave = WaveLoader::loadFromFile(path);
     if (loadedWave.empty()) break;
 
@@ -22,12 +22,12 @@ void WaveManager::loadRoomWaves(const std::string& roomBaseName) {
     waves.push_back(wave);
     waveNum++;
   }
-  std::cout << "Total waves loaded: " << waves.size() << std::endl; // Лог
+  std::cout << "Total waves loaded: " << waves.size() << std::endl;
 }
 
 void WaveManager::spawnNextWave(Player* player) {
   if (currentWaveIndex >= waves.size()) {
-    std::cout << "No more waves to spawn!" << std::endl; // Лог
+    std::cout << "No more waves to spawn!" << std::endl;
     return;
   }
 
@@ -36,7 +36,7 @@ void WaveManager::spawnNextWave(Player* player) {
     std::string texturePath = "image/" + spawn.type + ".png";
     std::cout << "Spawning " << spawn.type << " at ("
       << spawn.x * 32 << "," << spawn.y * 32
-      << ") with texture: " << texturePath << std::endl; // Лог
+      << ") with texture: " << texturePath << std::endl;
 
     std::string typeUpper = spawn.type;
     std::transform(typeUpper.begin(), typeUpper.end(), typeUpper.begin(), ::toupper);
@@ -68,13 +68,12 @@ bool WaveManager::isWaveCleared() const {
 }
 
 bool WaveManager::areAllWavesDone() const {
-  return currentWaveIndex >= waves.size();
+  return currentWaveIndex >= waves.size() && monsters.empty();
 }
 
 void WaveManager::startNextWave(Player* player) {
   this->player = player;
   if (currentWaveIndex >= waves.size()) return;
-  // Устанавливаем паузу 5 секунд после первой волны
   if (currentWaveIndex > 0) {
     waveDelay = 5.0f;
     isWaitingBetweenWaves = true;
@@ -101,7 +100,7 @@ void WaveManager::update(float deltaTime) {
   );
   for (auto& monster : monsters) {
     if (monster->life) {
-      monster->update(deltaTime); // Теперь монстры будут "жить"
+      monster->update(deltaTime);
     }
   }
 }

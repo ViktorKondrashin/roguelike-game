@@ -1,75 +1,103 @@
-﻿#include "GameManager.h"
+#include "GameManager.h"
 #include "PlayerCamera.h"
 #include <iostream>
 #include "MonsterFactory.h"
 
-// ========================
-// Конструктор и Singleton
-// ========================
 GameManager::GameManager()
   : currentState(GameState::MAIN_MENU),
   shopLoaded(false),
   currentRoomIndex(0),
   allRoomsCompleted(false),
   windowPtr(nullptr),
-  escWasPressedLastFrame(false)
-{
-}
+  escWasPressedLastFrame(false) {}
 
 GameManager& GameManager::getInstance() {
   static GameManager instance;
   return instance;
 }
 
-// ========================
-// Инициализация
-// ========================
+void GameManager::returnToLobby() {
+  saveProfiles();
+  currentState = GameState::LOBBY;
+
+  player->reset();
+  player->hp = player->maxHP;
+
+  const sf::Vector2f p = lobby.getSpawnPoint();
+  player->x = p.x;
+  player->y = p.y;
+  player->sprite.setPosition(p);
+
+  player->setLevelManager(&lobby.getLevelManager());
+  roomManager->init(player.get(), &lobby.getLevelManager());
+  if (allRoomsCompleted) {
+    std::cout << "All rooms completed! Congratulations!" << std::endl;
+    allRoomsCompleted = false;
+  }
+  roomManager->resetWaves();
+  currentRoomIndex = 0;
+}
+
+void GameManager::togglePause() {
+  static sf::Clock cooldown;
+  if (cooldown.getElapsedTime().asMilliseconds() < 200) return;
+
+  if (currentState == GameState::INGAME) {
+    currentState = GameState::PAUSED;
+    std::cout << "Game PAUSED" << std::endl;
+  }
+  else if (currentState == GameState::PAUSED) {
+    currentState = GameState::INGAME;
+    std::cout << "Game RESUMED" << std::endl;
+  }
+}
+
 void GameManager::initialize(sf::RenderWindow& window) {
   windowPtr = &window;
 
-  // Загрузка шрифта
   if (!font.loadFromFile("font/minecraft_0.ttf")) {
     std::cerr << "Failed to load font!" << std::endl;
   }
 
-  // HUD-текст
+  sf::Image cursorImage;
+  cursorImage.loadFromFile("image/aim.png");
+  if (
+      !customCursor.loadFromPixels(
+          cursorImage.getPixelsPtr(),
+          cursorImage.getSize(),
+          sf::Vector2u(16, 16)
+      )) {
+      std::cerr << "Failed to load cursor!" << std::endl;
+  }
+  window.setMouseCursor(customCursor);
+
   hudText.setFont(font);
   hudText.setCharacterSize(24);
   hudText.setFillColor(sf::Color::White);
 
-  // Регистрация монстров
   MonsterFactory::registerType<Slime>("SLIME");
   MonsterFactory::registerType<Ghost>("GHOST");
   MonsterFactory::registerType<Skeleton>("SKELETON");
 
-  // Загрузка ресурсов для MainMenu, Lobby и Shop
   mainMenu.loadResources();
   lobby.loadResources(font);
   shop.loadResources();
 
-  // Инициализация системы профилей
   profileManager = std::make_unique<ProfileManager>("profiles.txt");
   profileManager->loadProfiles();
   profileSelectScreen = std::make_unique<ProfileSelect>(font, *profileManager);
   profileNewInputScreen = std::make_unique<ProfileNewInput>(font);
-  // Сразу построим кнопки списка под размер окна
   profileSelectScreen->rebuildButtons(window.getSize());
 
-  // Инициализация уровня и комнат
   levelManager = std::make_unique<LevelManager>();
   roomManager = std::make_unique<RoomManager>();
 
-  // Создание игрока и выдача оружия
-  player = std::make_unique<Player>(500, 320, 32, 32,
-    "image/heroTileSet.png",
-    levelManager.get());
+  player = std::make_unique<Player>(500, 320, 32, 32, "image/heroTileSet.png", levelManager.get());
   player->setWeapon(std::make_unique<Bow>(50, 10, 200));
 
-  // Загрузка лобби в levelManager
   levelManager->loadFromFile("data/lobby.txt");
   levelManager->loadTileset("image/map.png");
 
-  // Кнопка «Return to Lobby» (позицию задаём при отрисовке)
   returnToLobbyButton = std::make_unique<Button>("Return to Lobby", font,
     sf::Vector2f(200.f, 40.f));
   returnToLobbyButton->setPosition({ 0.f, 0.f });
@@ -80,47 +108,46 @@ void GameManager::initialize(sf::RenderWindow& window) {
     sf::Color(80, 80, 120)
   );
 
-  // Инициализация менеджера комнат
   roomManager->init(player.get(), levelManager.get());
 
-  // Начальный вид
   currentView = window.getDefaultView();
+
+  lobby.setExitZone({ 380, 0, 130, 160 });
+  lobby.setSpawnPoint({ 450, 330 });
 }
 
-// ========================
-// Построение HUD
-// ========================
 void GameManager::drawUI(const sf::View& view) {
-  if (!player) return;
-  hudText.setString(
-    "HP: " + std::to_string(player->getHP()) +
-    "  Money: " + std::to_string(player->getMoney())
-  );
-  hudText.setPosition(view.getCenter().x - 380.f,
-    view.getCenter().y - 270.f);
-  windowPtr->draw(hudText);
+    if (!player || !windowPtr) return;
+
+    sf::View oldView = windowPtr->getView();
+
+    windowPtr->setView(windowPtr->getDefaultView());
+
+    hudText.setString(
+        "HP: " + std::to_string(player->getHP()) +
+        "  Money: " + std::to_string(player->getMoney())
+    );
+    hudText.setPosition(600.f, 10.f);
+    windowPtr->draw(hudText);
+    hudText.setCharacterSize(15);
+    hudText.setFillColor(sf::Color::White);
+
+    windowPtr->setView(oldView);
 }
 
-// ========================
-// Обновление (каждый кадр)
-// ========================
 void GameManager::update(float deltaTime) {
   if (!windowPtr) return;
-
-  // Глобальная позиция курсора в мире
   sf::Vector2f mousePosWorld = windowPtr->mapPixelToCoords(
     sf::Mouse::getPosition(*windowPtr),
     currentView
   );
 
   switch (currentState) {
-    // ---- Главное меню ----
   case GameState::MAIN_MENU: {
     mainMenu.update(mousePosWorld);
     break;
   }
 
-                           // ---- Выбор профиля ----
   case GameState::PROFILE_SELECT: {
     sf::Vector2f mouseScreenPos = windowPtr->mapPixelToCoords(
       sf::Mouse::getPosition(*windowPtr),
@@ -130,18 +157,14 @@ void GameManager::update(float deltaTime) {
     break;
   }
 
-                                // ---- Ввод нового профиля ----
   case GameState::PROFILE_NEW_INPUT: {
-    // Обработка ввода текста в handleEvent
     break;
   }
 
-                                   // ---- Лобби ----
-  case GameState::LOBBY: {
+  case GameState::LOBBY:
     player->update(deltaTime);
     lobby.update(deltaTime, *player);
 
-    // Пересчёт вида камеры
     currentView = PlayerCamera::getViewForPlayer(
       player->getPlayerCoordinateX(),
       player->getPlayerCoordinateY(),
@@ -150,7 +173,6 @@ void GameManager::update(float deltaTime) {
       windowPtr->getSize().y
     );
 
-    // Обработка кнопки «Exit to Menu»
     {
       sf::Vector2f mouseScreenPos = windowPtr->mapPixelToCoords(
         sf::Mouse::getPosition(*windowPtr),
@@ -158,7 +180,6 @@ void GameManager::update(float deltaTime) {
       );
       if (lobby.isExitToMenuPressed(mouseScreenPos)) {
         if (!currentProfileName.empty() && player) {
-          // Обновляем профиль в памяти
           for (auto& pr : const_cast<std::vector<Profile>&>(
             profileManager->getProfiles())) {
             if (pr.name == currentProfileName) {
@@ -177,16 +198,12 @@ void GameManager::update(float deltaTime) {
       }
     }
 
-    // Клавиша «E» → старт бега
-    if (lobby.isPlayerInExitZone(player->getPosition()) &&
-      sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
+    if (lobby.isPlayerInExitZone(player->getPosition()) && sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
       startRun();
     }
     break;
-  }
 
-                       // ---- InGame ----
-  case GameState::INGAME: {
+  case GameState::INGAME:
     player->update(deltaTime);
     roomManager->update(deltaTime);
 
@@ -198,7 +215,6 @@ void GameManager::update(float deltaTime) {
       windowPtr->getSize().y
     );
 
-    // Стрельба левой кнопкой
     if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
       player->attack(mousePosWorld);
     }
@@ -206,24 +222,22 @@ void GameManager::update(float deltaTime) {
     if (!player->life) {
       returnToLobby();
     }
-    else if (roomManager->isRoomCleared() && !roomManager->isWaiting()) {
-      currentRoomIndex++;
-      loadNextRoom();
+    else if (roomManager->isRoomCleared() &&
+        roomManager->isPlayerNearExit() &&
+        sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
+        currentRoomIndex++;
+        loadNextRoom();
     }
     break;
-  }
 
-                        // ---- Shop ----
-  case GameState::SHOP: {
+  case GameState::SHOP:
     shop.update(mousePosWorld, *player);
     if (shop.isExitPressed(mousePosWorld)) {
       saveProfiles();
       currentState = GameState::LOBBY;
     }
     break;
-  }
 
-                      // ---- Paused ----
   case GameState::PAUSED: {
     sf::Vector2f mouseScreenPos = windowPtr->mapPixelToCoords(
       sf::Mouse::getPosition(*windowPtr),
@@ -241,9 +255,6 @@ void GameManager::update(float deltaTime) {
   }
 }
 
-// ========================
-// Отрисовка (каждый кадр)
-// ========================
 void GameManager::render(sf::RenderWindow& window) {
   window.clear();
 
@@ -274,6 +285,13 @@ void GameManager::render(sf::RenderWindow& window) {
     break;
   }
 
+  case GameState::SHOP: {
+    window.setView(window.getDefaultView());
+    shop.draw(window);
+    drawUI(currentView);
+    break;
+  }
+
   case GameState::INGAME: {
     window.setView(currentView);
     levelManager->drawLevel(window);
@@ -281,13 +299,6 @@ void GameManager::render(sf::RenderWindow& window) {
     roomManager->draw(window);
     player->drawWeapon(window);
     roomManager->drawUI(window, currentView);
-    drawUI(currentView);
-    break;
-  }
-
-  case GameState::SHOP: {
-    window.setView(window.getDefaultView());
-    shop.draw(window);
     drawUI(currentView);
     break;
   }
@@ -303,6 +314,11 @@ void GameManager::render(sf::RenderWindow& window) {
 
     sf::View prevView = window.getView();
     window.setView(window.getDefaultView());
+
+    sf::RectangleShape overlay(sf::Vector2f(window.getSize()));
+    overlay.setFillColor(sf::Color(0, 0, 0, 150));
+    overlay.setPosition(0, 0);
+    window.draw(overlay);
 
     sf::Text pausedText("PAUSED (Press ESC to resume)", font, 40);
     sf::FloatRect textBounds = pausedText.getLocalBounds();
@@ -334,11 +350,7 @@ void GameManager::render(sf::RenderWindow& window) {
   window.display();
 }
 
-// ========================
-// Обработчик событий
-// ========================
 void GameManager::handleEvent(const sf::Event& event) {
-  // --- 1) Ввод имени нового профиля ---
   if (currentState == GameState::PROFILE_NEW_INPUT) {
     if (event.type == sf::Event::TextEntered) {
       bool ready = profileNewInputScreen->handleTextEvent(event);
@@ -361,7 +373,6 @@ void GameManager::handleEvent(const sf::Event& event) {
     return;
   }
 
-  // --- 2) Экран выбора профиля ---
   if (currentState == GameState::PROFILE_SELECT) {
     if (event.type == sf::Event::MouseWheelScrolled) {
       profileSelectScreen->handleScroll(event.mouseWheelScroll.delta);
@@ -393,7 +404,6 @@ void GameManager::handleEvent(const sf::Event& event) {
     return;
   }
 
-  // --- 3) Главное меню: клик Play/Exit ---
   if (currentState == GameState::MAIN_MENU && event.type == sf::Event::MouseButtonPressed) {
     sf::Vector2f mouseScreenPos = windowPtr->mapPixelToCoords(
       sf::Mouse::getPosition(*windowPtr),
@@ -411,10 +421,10 @@ void GameManager::handleEvent(const sf::Event& event) {
     }
   }
 
-  // --- 4) Клавиши ESC / Space для паузы и старта ---
   if (event.type == sf::Event::KeyPressed) {
-    if (event.key.code == sf::Keyboard::Escape) {
+    if (event.key.code == sf::Keyboard::Escape && !escWasPressedLastFrame) {
       togglePause();
+      escWasPressedLastFrame = true;
       return;
     }
     if (event.key.code == sf::Keyboard::Space &&
@@ -424,7 +434,6 @@ void GameManager::handleEvent(const sf::Event& event) {
     }
   }
 
-  // --- 5) InGame: клик мыши → атака ---
   if (currentState == GameState::INGAME && event.type == sf::Event::MouseButtonPressed) {
     sf::Vector2f mousePosWorld = windowPtr->mapPixelToCoords(
       sf::Mouse::getPosition(*windowPtr),
@@ -434,19 +443,18 @@ void GameManager::handleEvent(const sf::Event& event) {
     return;
   }
 
-  // --- 6) Магазин: клик Exit ---
   if (currentState == GameState::SHOP && event.type == sf::Event::MouseButtonPressed) {
-    sf::Vector2f mousePosWorld = windowPtr->mapPixelToCoords(
+    sf::Vector2f mouseScreenPos = windowPtr->mapPixelToCoords(
       sf::Mouse::getPosition(*windowPtr),
       windowPtr->getDefaultView()
     );
-    if (shop.isExitPressed(mousePosWorld)) {
+    if (shop.isExitPressed(mouseScreenPos)) {
+      startProfileSelect();
       currentState = GameState::LOBBY;
       return;
     }
   }
 
-  // --- 7) Пауза: клик Return to Lobby ---
   if (currentState == GameState::PAUSED && event.type == sf::Event::MouseButtonPressed) {
     sf::Vector2f mouseScreenPos = windowPtr->mapPixelToCoords(
       sf::Mouse::getPosition(*windowPtr),
@@ -460,9 +468,6 @@ void GameManager::handleEvent(const sf::Event& event) {
   }
 }
 
-// ========================
-// Загрузка выбранного профиля
-// ========================
 void GameManager::applyProfile(const std::string& profileName) {
   auto opt = profileManager->getProfile(profileName);
   if (!opt.has_value()) return;
@@ -482,9 +487,6 @@ void GameManager::applyProfile(const std::string& profileName) {
   player->reset();
 }
 
-// ========================
-// Переходы состояний
-// ========================
 void GameManager::startProfileSelect() {
   profileManager->loadProfiles();
   profileSelectScreen->rebuildButtons(windowPtr->getSize());
@@ -492,6 +494,8 @@ void GameManager::startProfileSelect() {
 }
 
 void GameManager::startGame() {
+  player->setLevelManager(&lobby.getLevelManager());
+  roomManager->init(player.get(), &lobby.getLevelManager());
   currentState = GameState::LOBBY;
   sf::sleep(sf::milliseconds(100));
   std::cout << "Switched to LOBBY" << std::endl;
@@ -500,36 +504,44 @@ void GameManager::startGame() {
 void GameManager::startRun() {
   currentRoomIndex = 0;
   allRoomsCompleted = false;
+  player->setLevelManager(levelManager.get());
+  roomManager->init(player.get(), levelManager.get());
   loadNextRoom();
 }
 
-void GameManager::returnToLobby() {
-  saveProfiles();
-  currentState = GameState::LOBBY;
-  player->reset();
-  player->hp=player->maxHP;
-  if (allRoomsCompleted) {
-    std::cout << "All rooms completed! Congratulations!" << std::endl;
-    allRoomsCompleted = false;
+void GameManager::loadNextRoom() {
+  if (currentRoomIndex >= roomList.size()) {
+    allRoomsCompleted = true;
+    returnToLobby();
+    return;
   }
-  currentRoomIndex = 0;
-}
 
-void GameManager::togglePause() {
-  if (currentState == GameState::INGAME) {
-    currentState = GameState::PAUSED;
-    std::cout << "Game PAUSED" << std::endl;
+  if (!levelManager->loadFromFile("data/" + roomList[currentRoomIndex])) {
+    std::cerr << "Failed to load room: " << roomList[currentRoomIndex] << std::endl;
+    return;
   }
-  else if (currentState == GameState::PAUSED) {
-    saveProfiles();
-    currentState = GameState::INGAME;
-    std::cout << "Game RESUMED" << std::endl;
+
+  std::string roomName = roomList[currentRoomIndex];
+  roomName = roomName.substr(0, roomName.find_last_of('.'));
+
+  roomManager->loadRoom(roomName);
+
+  roomManager->resetWaves();
+  if (auto pos = levelManager->findTile('r')) {
+      sf::Vector2f spawn((pos->x + 0.5f) * 32.f, (pos->y + 0.5f) * 32.f);
+      player->x = spawn.x;
+      player->y = spawn.y;
+      player->sprite.setPosition(spawn);
+      levelManager->setTile(pos->x, pos->y, '=');
   }
+
+  currentState = GameState::INGAME;
+  std::cout << "Loading room: " << roomName << std::endl;
 }
 
 void GameManager::enterShop() {
   currentState = GameState::SHOP;
-  player->sprite.setPosition(500.f, 320.f);
+  player->sprite.setPosition(500, 320);
   if (!shopLoaded) {
     shop.loadResources();
     shopLoaded = true;
@@ -551,31 +563,6 @@ bool GameManager::isExitClicked(const sf::Vector2f& mousePos) {
   return mainMenu.isExitClicked(mousePos);
 }
 
-// ========================
-// Загрузка следующей комнаты
-// ========================
-void GameManager::loadNextRoom() {
-  if (currentRoomIndex >= roomList.size()) {
-    allRoomsCompleted = true;
-    returnToLobby();
-    return;
-  }
-
-  if (!levelManager->loadFromFile("data/" + roomList[currentRoomIndex])) {
-    std::cerr << "Failed to load room: "
-      << roomList[currentRoomIndex] << std::endl;
-    return;
-  }
-  std::string roomName = roomList[currentRoomIndex];
-  roomName = roomName.substr(0, roomName.find_last_of('.'));
-  roomManager->loadRoom(roomName);
-  currentState = GameState::INGAME;
-  std::cout << "Loading room: " << roomName << std::endl;
-}
-
-// ========================
-// Сохранение профилей
-// ========================
 void GameManager::saveProfiles() {
   if (!profileManager) return;
 
